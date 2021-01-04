@@ -19,6 +19,7 @@ supp.pdf
 *.tsv
 *.txt
 *.npy
+*.pkl
 
 # Office files
 *.docx

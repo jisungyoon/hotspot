@@ -14,11 +14,15 @@ main.pdf
 supp.pdf
 *.log
 
+#Figs file
+*.pdf
+
 # Data files
 *.csv
 *.tsv
 *.txt
 *.npy
+*.pkl
 
 # Office files
 *.docx

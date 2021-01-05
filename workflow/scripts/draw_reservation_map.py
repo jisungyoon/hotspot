@@ -1,7 +1,7 @@
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
-# draw reservation map
+
 from matplotlib import cm, figure, font_manager
 from matplotlib.colors import LogNorm
 from pyproj import Proj, transform
@@ -53,7 +53,7 @@ seoul_shp["geometry"] = seoul_shp.apply(
     lambda x: transform_polygon(x, mode="grid"), axis=1
 )
 
-
+# draw reservation map
 prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=22)
 small_prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=18)
 

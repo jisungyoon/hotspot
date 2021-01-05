@@ -1,7 +1,6 @@
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
-
 from matplotlib import cm, figure, font_manager
 from matplotlib.colors import LogNorm
 from pyproj import Proj, transform

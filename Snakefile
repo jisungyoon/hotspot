@@ -26,10 +26,14 @@ SEQUENCE_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "sequence.npy")
 SEQUENCE_LENGTH_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "sequence_length.npy")
 
 GRID_RESERVATION_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "reservation_by_grid.npy")
-GRID_HOTSPOT_LEVEL_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "hot_spot_level_by_grid.npy")
+GRID_HOTSPOT_LEVEL_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "hotspot_level_by_grid.npy")
 
 VENDOR_TO_GRID_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "vendor_to_grid.pkl")
-VENDOR_TO_HOT_SPOT_LEVEL_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "vendor_to_hot_spot_level.pkl")
+VENDOR_TO_HOTSPOT_LEVEL_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "vendor_to_hotspot_level.pkl")
+
+HOTSPOT_MATRIX_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "hotspot_matrix.npy")
+NULL_HOTSPOT_MATRIX_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "null_hotspot_matrix.npy")
+PSI_RESULT_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "psi.csv")
 
 ###############################################################################
 # ASSETS
@@ -44,6 +48,9 @@ FIGS_BY_PERIOD = j(FIGURE_DIR, "{period}")
 RESERVATION_MAP_BY_PERIOD = j(FIGS_BY_PERIOD, "reservation_map.pdf")
 HOTSPOT_MAP_BY_PERIOD = j(FIGS_BY_PERIOD, "hotspot_map.pdf")
 
+HOTSPOT_MATRIX_FIG_BY_PERIOD = j(FIGS_BY_PERIOD, "hotspot_matrix.pdf")
+NULL_HOTSPOT_MATRIX_FIG_BY_PERIOD = j(FIGS_BY_PERIOD, "null_hotspot_matrix.pdf")
+
 
 
 ###############################################################################
@@ -57,7 +64,7 @@ MIN_LAT = 37.45
 MAX_LON = 127.16
 MIN_LON = 126.80
 
-HOT_SPOT_LEVEL = 10
+HOTSPOT_LEVEL = 10
 
 
 
@@ -69,8 +76,9 @@ rule all:
         expand(SEQUENCE_LENGTH_BY_PERIOD, period=PERIODS),
         expand(RESERVATION_MAP_BY_PERIOD, period=PERIODS),
         expand(HOTSPOT_MAP_BY_PERIOD, period=PERIODS),
-        expand(VENDOR_TO_GRID_BY_PERIOD, period=PERIODS),
-        expand(VENDOR_TO_HOT_SPOT_LEVEL_BY_PERIOD, period=PERIODS)
+        expand(HOTSPOT_MATRIX_FIG_BY_PERIOD, period=PERIODS),
+        expand(NULL_HOTSPOT_MATRIX_FIG_BY_PERIOD, period=PERIODS),
+        expand(PSI_RESULT_BY_PERIOD, period=PERIODS)
 
 
 rule generate_sequence:
@@ -81,12 +89,20 @@ rule generate_sequence:
     
 rule hotspot_analysis:
     input: raw=RAW_SEQUENCE_DATA, meta=META_DATA
-    output: reservation_by_grid=GRID_RESERVATION_BY_PERIOD, hot_spot_level_by_grid=GRID_HOTSPOT_LEVEL_BY_PERIOD, vendor_to_grid=VENDOR_TO_GRID_BY_PERIOD, vendor_to_hotspot_level=VENDOR_TO_HOT_SPOT_LEVEL_BY_PERIOD
-    params: n_lat_bin=N_LAT_BIN, n_lon_bin = N_LON_BIN, max_lat=MAX_LAT, min_lat=MIN_LAT, max_lon=MAX_LON, min_lon=MIN_LON, hot_spot_level=HOT_SPOT_LEVEL 
+    output: reservation_by_grid=GRID_RESERVATION_BY_PERIOD, hotspot_level_by_grid=GRID_HOTSPOT_LEVEL_BY_PERIOD, vendor_to_grid=VENDOR_TO_GRID_BY_PERIOD, vendor_to_hotspot_level=VENDOR_TO_HOTSPOT_LEVEL_BY_PERIOD
+    params: n_lat_bin=N_LAT_BIN, n_lon_bin = N_LON_BIN, max_lat=MAX_LAT, min_lat=MIN_LAT, max_lon=MAX_LON, min_lon=MIN_LON, hotspot_level=HOTSPOT_LEVEL 
     script: "workflow/scripts/make_grids_and_hotspot_anlaysis.py"
     
 rule draw_reservation_map:
     input: reservation_by_grid=GRID_RESERVATION_BY_PERIOD, hotspot_level_by_grid=GRID_HOTSPOT_LEVEL_BY_PERIOD, shape_file=SHAPE_FILE, font_file=NORMAL_FONT_PATH
     output: reservation_map=RESERVATION_MAP_BY_PERIOD, hotspot_map=HOTSPOT_MAP_BY_PERIOD
-    params: n_lat_bin=N_LAT_BIN, n_lon_bin = N_LON_BIN, max_lat=MAX_LAT, min_lat=MIN_LAT, max_lon=MAX_LON, min_lon=MIN_LON, hot_spot_level=HOT_SPOT_LEVEL 
+    params: n_lat_bin=N_LAT_BIN, n_lon_bin = N_LON_BIN, max_lat=MAX_LAT, min_lat=MIN_LAT, max_lon=MAX_LON, min_lon=MIN_LON
     script: "workflow/scripts/draw_reservation_map.py"
+    
+    
+rule calculate_transition_matrix_and_psi:
+    input: sequence=SEQUENCE_BY_PERIOD, hotspot_level_by_grid=GRID_HOTSPOT_LEVEL_BY_PERIOD, vendor_to_grid=VENDOR_TO_GRID_BY_PERIOD, font_file=NORMAL_FONT_PATH
+    output: hotspot_matrix=HOTSPOT_MATRIX_BY_PERIOD, null_hotspot_matrix=NULL_HOTSPOT_MATRIX_BY_PERIOD, hotspot_matrix_fig=HOTSPOT_MATRIX_FIG_BY_PERIOD, null_hotspot_matrix_fig=NULL_HOTSPOT_MATRIX_FIG_BY_PERIOD, psi_result=PSI_RESULT_BY_PERIOD
+    params: hotspot_level=HOTSPOT_LEVEL 
+    script: "workflow/scripts/calculate_transition_matrix_and_psi.py"
+    

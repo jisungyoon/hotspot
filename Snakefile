@@ -16,6 +16,7 @@ ASSETS_DIR = config["assets_dir"]
 PERIODS = ["before", "after"]
 RAW_SEQUENCE_DATA = j(RAW_DIR, "{period}_data.csv")
 META_DATA = j(RAW_DIR, "meta_data.csv")
+SHAPE_FILE = j(SHAPE_FILE_DIR , "seoul.shp")
 
 ###############################################################################
 # DERIVED_DATA
@@ -25,15 +26,23 @@ SEQUENCE_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "sequence.npy")
 SEQUENCE_LENGTH_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "sequence_length.npy")
 
 GRID_RESERVATION_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "reservation_by_grid.npy")
-GRID_HOT_SPOT_LEVEL_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "hot_spot_level_by_grid.npy")
+GRID_HOTSPOT_LEVEL_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "hot_spot_level_by_grid.npy")
 
 VENDOR_TO_GRID_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "vendor_to_grid.pkl")
 VENDOR_TO_HOT_SPOT_LEVEL_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "vendor_to_hot_spot_level.pkl")
 
 ###############################################################################
+# ASSETS
+###############################################################################
+NORMAL_FONT_PATH = j(ASSETS_DIR, "Helvetica.ttf")
+
+###############################################################################
 # FIGS
 ###############################################################################
 FIGS_BY_PERIOD = j(FIGURE_DIR, "{period}")
+
+RESERVATION_MAP_BY_PERIOD = j(FIGS_BY_PERIOD, "reservation_map.pdf")
+HOTSPOT_MAP_BY_PERIOD = j(FIGS_BY_PERIOD, "hotspot_map.pdf")
 
 
 
@@ -58,8 +67,8 @@ rule all:
     input:
         expand(SEQUENCE_BY_PERIOD, period=PERIODS),
         expand(SEQUENCE_LENGTH_BY_PERIOD, period=PERIODS),
-        expand(GRID_RESERVATION_BY_PERIOD, period=PERIODS),
-        expand(GRID_HOT_SPOT_LEVEL_BY_PERIOD, period=PERIODS),
+        expand(RESERVATION_MAP_BY_PERIOD, period=PERIODS),
+        expand(HOTSPOT_MAP_BY_PERIOD, period=PERIODS),
         expand(VENDOR_TO_GRID_BY_PERIOD, period=PERIODS),
         expand(VENDOR_TO_HOT_SPOT_LEVEL_BY_PERIOD, period=PERIODS)
 
@@ -72,6 +81,12 @@ rule generate_sequence:
     
 rule hotspot_analysis:
     input: raw=RAW_SEQUENCE_DATA, meta=META_DATA
-    output: reservation_by_grid=GRID_RESERVATION_BY_PERIOD, hot_spot_level_by_grid=GRID_HOT_SPOT_LEVEL_BY_PERIOD, vendor_to_grid=VENDOR_TO_GRID_BY_PERIOD, vendor_to_hotspot_level=VENDOR_TO_HOT_SPOT_LEVEL_BY_PERIOD
+    output: reservation_by_grid=GRID_RESERVATION_BY_PERIOD, hot_spot_level_by_grid=GRID_HOTSPOT_LEVEL_BY_PERIOD, vendor_to_grid=VENDOR_TO_GRID_BY_PERIOD, vendor_to_hotspot_level=VENDOR_TO_HOT_SPOT_LEVEL_BY_PERIOD
     params: n_lat_bin=N_LAT_BIN, n_lon_bin = N_LON_BIN, max_lat=MAX_LAT, min_lat=MIN_LAT, max_lon=MAX_LON, min_lon=MIN_LON, hot_spot_level=HOT_SPOT_LEVEL 
     script: "workflow/scripts/make_grids_and_hotspot_anlaysis.py"
+    
+rule draw_reservation_map:
+    input: reservation_by_grid=GRID_RESERVATION_BY_PERIOD, hotspot_level_by_grid=GRID_HOTSPOT_LEVEL_BY_PERIOD, shape_file=SHAPE_FILE, font_file=NORMAL_FONT_PATH
+    output: reservation_map=RESERVATION_MAP_BY_PERIOD, hotspot_map=HOTSPOT_MAP_BY_PERIOD
+    params: n_lat_bin=N_LAT_BIN, n_lon_bin = N_LON_BIN, max_lat=MAX_LAT, min_lat=MIN_LAT, max_lon=MAX_LON, min_lon=MIN_LON, hot_spot_level=HOT_SPOT_LEVEL 
+    script: "workflow/scripts/draw_reservation_map.py"

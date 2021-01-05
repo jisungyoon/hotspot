@@ -35,6 +35,11 @@ HOTSPOT_MATRIX_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "hotspot_matrix.npy")
 NULL_HOTSPOT_MATRIX_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "null_hotspot_matrix.npy")
 PSI_RESULT_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "psi.csv")
 
+HOME_PDF_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "home_pdf.pkl")
+
+ENTROPY_DATA_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "entropy_data.npy")
+VARIANCE_DATA_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "varaince_data.npy")
+
 ###############################################################################
 # ASSETS
 ###############################################################################
@@ -51,6 +56,11 @@ HOTSPOT_MAP_BY_PERIOD = j(FIGS_BY_PERIOD, "hotspot_map.pdf")
 HOTSPOT_MATRIX_FIG_BY_PERIOD = j(FIGS_BY_PERIOD, "hotspot_matrix.pdf")
 NULL_HOTSPOT_MATRIX_FIG_BY_PERIOD = j(FIGS_BY_PERIOD, "null_hotspot_matrix.pdf")
 
+HOME_VALIDATION_BY_PERIOD = j(FIGS_BY_PERIOD, "home_validation.pdf")
+
+ENT_VAR_BY_PERIOD = j(FIGS_BY_PERIOD, "entropy_variance_data.pdf")
+OVERLAP_ENT_VAR = j(FIGURE_DIR, "entropy_variance_data_overlap.pdf")
+
 
 
 ###############################################################################
@@ -66,6 +76,12 @@ MIN_LON = 126.80
 
 HOTSPOT_LEVEL = 10
 
+MAX_ENTROPY = 2.2
+MAX_VARIANCE = 24
+ 
+N_ENTROPY_BIN = 30
+N_VARIANCE_BIN = 30
+
 
 
 
@@ -78,7 +94,10 @@ rule all:
         expand(HOTSPOT_MAP_BY_PERIOD, period=PERIODS),
         expand(HOTSPOT_MATRIX_FIG_BY_PERIOD, period=PERIODS),
         expand(NULL_HOTSPOT_MATRIX_FIG_BY_PERIOD, period=PERIODS),
-        expand(PSI_RESULT_BY_PERIOD, period=PERIODS)
+        expand(PSI_RESULT_BY_PERIOD, period=PERIODS),
+        expand(HOME_VALIDATION_BY_PERIOD, period=PERIODS),
+        expand(ENT_VAR_BY_PERIOD, period=PERIODS),
+        OVERLAP_ENT_VAR 
 
 
 rule generate_sequence:
@@ -105,4 +124,25 @@ rule calculate_transition_matrix_and_psi:
     output: hotspot_matrix=HOTSPOT_MATRIX_BY_PERIOD, null_hotspot_matrix=NULL_HOTSPOT_MATRIX_BY_PERIOD, hotspot_matrix_fig=HOTSPOT_MATRIX_FIG_BY_PERIOD, null_hotspot_matrix_fig=NULL_HOTSPOT_MATRIX_FIG_BY_PERIOD, psi_result=PSI_RESULT_BY_PERIOD
     params: hotspot_level=HOTSPOT_LEVEL 
     script: "workflow/scripts/calculate_transition_matrix_and_psi.py"
+    
+    
+rule calculate_and_validate_home_distribution:
+    input: sequence=SEQUENCE_BY_PERIOD, vendor_to_grid=VENDOR_TO_GRID_BY_PERIOD, reservation_by_grid=GRID_RESERVATION_BY_PERIOD, font_file=NORMAL_FONT_PATH
+    output: home_pdf=HOME_PDF_BY_PERIOD, home_validation_fig=HOME_VALIDATION_BY_PERIOD 
+    script: "workflow/scripts/calculate_and_validate_home_distribution.py"
+
+rule calculate_entropy_variance_data:
+    input: sequence=SEQUENCE_BY_PERIOD, vendor_to_grid=VENDOR_TO_GRID_BY_PERIOD, hotspot_level_by_grid=GRID_HOTSPOT_LEVEL_BY_PERIOD, font_file=NORMAL_FONT_PATH
+    output: entropy=ENTROPY_DATA_BY_PERIOD, variance=VARIANCE_DATA_BY_PERIOD, ent_var_fig=ENT_VAR_BY_PERIOD
+    params: hotspot_level=HOTSPOT_LEVEL, max_entropy=MAX_ENTROPY, max_variance=MAX_VARIANCE, n_entropy_bin=N_ENTROPY_BIN, n_variance_bin=N_VARIANCE_BIN
+    script: "workflow/scripts/calculate_entropy_and_variance_data.py"
+    
+rule draw_overlap_ent_var_fig:
+    input: entropy=expand(ENTROPY_DATA_BY_PERIOD, period=PERIODS), variance=expand(VARIANCE_DATA_BY_PERIOD, period=PERIODS), font_file=NORMAL_FONT_PATH
+    output: overlap_ent_var_fig=OVERLAP_ENT_VAR 
+    params: hotspot_level=HOTSPOT_LEVEL, max_entropy=MAX_ENTROPY, max_variance=MAX_VARIANCE, n_entropy_bin=N_ENTROPY_BIN, n_variance_bin=N_VARIANCE_BIN
+    script: "workflow/scripts/draw_overlapped_ent_var.py"
+
+    
+    
     

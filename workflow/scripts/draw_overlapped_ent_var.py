@@ -1,7 +1,6 @@
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib import font_manager
 
 from common import calculate_entropy, calculate_locational_variance, get_pdf
@@ -31,31 +30,59 @@ ent_bins = np.linspace(0, max_entropy, n_entropy_bin + 1)
 var_bins = np.linspace(0, max_variance, n_variance_bin + 1)
 
 # calculate pdf
-ent_xs = [(ent_bins[i] + ent_bins[i + 1])/2 for i in range(len(ent_bins) - 1)]
-var_xs = [(var_bins[i] + var_bins[i + 1])/2 for i in range(len(var_bins) - 1)]
+ent_xs = [(ent_bins[i] + ent_bins[i + 1]) / 2 for i in range(len(ent_bins) - 1)]
+var_xs = [(var_bins[i] + var_bins[i + 1]) / 2 for i in range(len(var_bins) - 1)]
 
 
 ent_data_pdf_before = get_pdf(entropy_before, ent_bins)
-ent_data_pdf_after =  get_pdf(entropy_after, ent_bins)
+ent_data_pdf_after = get_pdf(entropy_after, ent_bins)
 var_data_pdf_before = get_pdf(variance_before, var_bins)
 var_data_pdf_after = get_pdf(variance_after, var_bins)
 
 
 # draw figure
-plt.rcParams['figure.figsize'] = (12.0, 6.0)
+plt.rcParams["figure.figsize"] = (12.0, 6.0)
 
-prop = font_manager.FontProperties(fname=INPUT_FONT_FILE , size=22)
+prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=22)
 tiny_prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=15)
 fig, (ax1, ax2) = plt.subplots(1, 2)
 
-ax1.plot(ent_xs, ent_data_pdf_before, '-o', markerfacecolor='white', color='darkorange', label='before COVID-19')
-ax1.plot(ent_xs, ent_data_pdf_after, '-o', markerfacecolor='white', color='cornflowerblue', label='after COVID-19')
-ax1.set_xlabel('Entropy', fontproperties=prop)
-ax1.set_ylabel('PDF', fontproperties=prop)
+ax1.plot(
+    ent_xs,
+    ent_data_pdf_before,
+    "-o",
+    markerfacecolor="white",
+    color="darkorange",
+    label="before COVID-19",
+)
+ax1.plot(
+    ent_xs,
+    ent_data_pdf_after,
+    "-o",
+    markerfacecolor="white",
+    color="cornflowerblue",
+    label="after COVID-19",
+)
+ax1.set_xlabel("Entropy", fontproperties=prop)
+ax1.set_ylabel("PDF", fontproperties=prop)
 
-ax2.plot(var_xs, var_data_pdf_before, '-o', markerfacecolor='white', color='darkorange', label='before COVID-19')
-ax2.plot(var_xs, var_data_pdf_after, '-o', markerfacecolor='white', color='cornflowerblue', label='after COVID-19')
-ax2.set_xlabel('Locational Variance', fontproperties=prop)
+ax2.plot(
+    var_xs,
+    var_data_pdf_before,
+    "-o",
+    markerfacecolor="white",
+    color="darkorange",
+    label="before COVID-19",
+)
+ax2.plot(
+    var_xs,
+    var_data_pdf_after,
+    "-o",
+    markerfacecolor="white",
+    color="cornflowerblue",
+    label="after COVID-19",
+)
+ax2.set_xlabel("Locational Variance", fontproperties=prop)
 
 plt.legend(prop=prop, frameon=False)
 
@@ -67,5 +94,5 @@ for label in ax2.get_xticklabels():
     label.set_fontproperties(tiny_prop)
 for label in ax2.get_yticklabels():
     label.set_fontproperties(tiny_prop)
-    
-plt.savefig(OUTPUT_OVERELAP_FIG , bbox_inches='tight')
+
+plt.savefig(OUTPUT_OVERELAP_FIG, bbox_inches="tight")

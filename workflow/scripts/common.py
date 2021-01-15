@@ -46,14 +46,27 @@ def get_pdf(points, bins):
     return temp_ys
 
 
-def generate_sequence(p, k, generated_homes, sequence_length, grid_to_hotspot_level, hotspot_level_to_grid, transition_matrix):
+def generate_sequence(
+    p,
+    k,
+    generated_homes,
+    sequence_length,
+    grid_to_hotspot_level,
+    hotspot_level_to_grid,
+    transition_matrix,
+):
     generated_sequences = []
     for home, length in zip(generated_homes, sequence_length):
         home_hotspot_level = int(grid_to_hotspot_level[home])
         temp_trans_prob = transition_matrix[home_hotspot_level - 1]
-        next_hot_levels = np.random.choice(np.arange(10), size=int(length/2), replace=True, p=temp_trans_prob) + 1
+        next_hot_levels = (
+            np.random.choice(
+                np.arange(10), size=int(length / 2), replace=True, p=temp_trans_prob
+            )
+            + 1
+        )
         next_grids = []
-        
+
         for level in next_hot_levels:
             if home_hotspot_level == level:
                 if np.random.random() < p:
@@ -63,7 +76,7 @@ def generate_sequence(p, k, generated_homes, sequence_length, grid_to_hotspot_le
             else:
                 next_grid = get_next_grid(home, k, hotspot_level_to_grid[level])
             next_grids.append(next_grid)
-        
+
         temp_sequnece = []
         for i in range(length):
             if i % 2 == 0:
@@ -71,12 +84,19 @@ def generate_sequence(p, k, generated_homes, sequence_length, grid_to_hotspot_le
             else:
                 temp_sequnece.append(next_grids.pop())
         generated_sequences.append(temp_sequnece)
-        
+
     return generated_sequences
-        
+
+
 def get_next_grid(home, k, target_grids):
     target_grids = [spot for spot in target_grids if spot != home]
-    weight = np.array([1/np.power(np.sqrt((spot[0] - home[0]) ** 2 + (spot[1] - home[1]) ** 2), k) for spot in target_grids])
-    weight = weight/sum(weight)
-    
+    weight = np.array(
+        [
+            1
+            / np.power(np.sqrt((spot[0] - home[0]) ** 2 + (spot[1] - home[1]) ** 2), k)
+            for spot in target_grids
+        ]
+    )
+    weight = weight / sum(weight)
+
     return target_grids[np.random.choice(np.arange(len(target_grids)), p=weight)]

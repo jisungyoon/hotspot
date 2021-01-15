@@ -1,9 +1,11 @@
+from collections import defaultdict
+
 import numpy as np
 import pandas as pd
-from collections import defaultdict
 from scipy.spatial.distance import jensenshannon
 
-from common import calculate_entropy, calculate_locational_variance, get_pdf, generate_sequence
+from common import (calculate_entropy, calculate_locational_variance,
+                    generate_sequence, get_pdf)
 
 INPUT_HOME_PDF = snakemake.input.home_pdf
 INPUT_SEQUENCE_LENGTH = snakemake.input.sequence_length
@@ -30,7 +32,7 @@ repetition = int(snakemake.params.repetition)
 home_pdf = pd.read_pickle(INPUT_HOME_PDF)
 sequence_length = np.load(INPUT_SEQUENCE_LENGTH, allow_pickle=True)
 hotspot_matrix = np.load(INPUT_HOTSPOT_MATRIX)
-transition_prob = np.array([row/sum(row) for row in hotspot_matrix])
+transition_prob = np.array([row / sum(row) for row in hotspot_matrix])
 
 hotspot_level_by_grid = np.load(INPUT_HOTSPOT_LEVEL_BY_GRID)
 grid_to_hotspot_level = {
@@ -40,7 +42,7 @@ grid_to_hotspot_level = {
     if val != 11
 }
 hotspot_level_to_grid = defaultdict(list)
-for k_,v_ in grid_to_hotspot_level.items():
+for k_, v_ in grid_to_hotspot_level.items():
     hotspot_level_to_grid[v_].append(k_)
 
 homes = list(home_pdf.keys())
@@ -51,17 +53,29 @@ variances_array = []
 
 # generate sequences
 for i in range(repetition):
-    generated_homes_idx = np.random.choice(np.arange(len(homes)), size=len(sequence_length), replace=True, p=homes_p)
+    generated_homes_idx = np.random.choice(
+        np.arange(len(homes)), size=len(sequence_length), replace=True, p=homes_p
+    )
     generated_homes = [tuple(homes[idx]) for idx in generated_homes_idx]
-    generated_sequences = generate_sequence(p, k, generated_homes, sequence_length, grid_to_hotspot_level, hotspot_level_to_grid, transition_prob)
-    
-    entropies = calculate_entropy(generated_sequences, grid_to_hotspot_level, hotspot_level=hotspot_level)
+    generated_sequences = generate_sequence(
+        p,
+        k,
+        generated_homes,
+        sequence_length,
+        grid_to_hotspot_level,
+        hotspot_level_to_grid,
+        transition_prob,
+    )
+
+    entropies = calculate_entropy(
+        generated_sequences, grid_to_hotspot_level, hotspot_level=hotspot_level
+    )
     variances = np.mean(
         [calculate_locational_variance(generated_sequences) for i in range(10)], axis=0
     )
     entropies_array.append(entropies)
     variances_array.append(variances)
-    
+
 # calculate JSD
 entropy_data = np.load(INPUT_ENTROPY_DATA)
 variance_data = np.load(INPUT_VARIANCE_DATA)
@@ -84,13 +98,11 @@ for entropies, variances in zip(entropies_array, variances_array):
     var_jsd = jensenshannon(var_data_pdf, var_sim_pdf)
     ent_jsds.append(ent_jsd)
     var_jsds.append(var_jsd)
-    
-    
-df = pd.DataFrame({
-    'ent_jsd': ent_jsds,
-    'var_jsd': var_jsds,
-    'repetition': list(range(repetition))
-})
+
+
+df = pd.DataFrame(
+    {"ent_jsd": ent_jsds, "var_jsd": var_jsds, "repetition": list(range(repetition))}
+)
 df.to_csv(OUTPUT_JSD_RESULT, index=None)
 np.save(OUTPUT_ENTROPY, entropies_array)
 np.save(OUTPUT_VARAINCE, variances_array)

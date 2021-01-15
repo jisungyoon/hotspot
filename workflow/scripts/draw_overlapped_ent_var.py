@@ -51,17 +51,23 @@ ax1.plot(
     ent_xs,
     ent_data_pdf_before,
     "-o",
+    linewidth=1.5,
     markerfacecolor="white",
-    color="darkorange",
-    label="before COVID-19",
+    markersize=0,
+    color="tab:orange",
+    alpha=0.7,
+    label="Pre COVID-19",
 )
 ax1.plot(
     ent_xs,
     ent_data_pdf_after,
     "-o",
+    linewidth=1.5,
     markerfacecolor="white",
-    color="cornflowerblue",
-    label="after COVID-19",
+    markersize=0,
+    color="tab:blue",
+    alpha=0.7,
+    label="Post COVID-19",
 )
 ax1.set_xlabel("Entropy", fontproperties=prop)
 ax1.set_ylabel("PDF", fontproperties=prop)
@@ -70,17 +76,23 @@ ax2.plot(
     var_xs,
     var_data_pdf_before,
     "-o",
+    linewidth=1.5,
     markerfacecolor="white",
-    color="darkorange",
-    label="before COVID-19",
+    markersize=0,
+    color="tab:orange",
+    alpha=0.7,
+    label="Pre COVID-19",
 )
 ax2.plot(
     var_xs,
     var_data_pdf_after,
     "-o",
+    linewidth=1.5,
     markerfacecolor="white",
-    color="cornflowerblue",
-    label="after COVID-19",
+    markersize=0,
+    color="tab:blue",
+    alpha=0.7,
+    label="Post COVID-19",
 )
 ax2.set_xlabel("Locational Variance", fontproperties=prop)
 

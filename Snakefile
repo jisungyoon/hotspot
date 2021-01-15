@@ -4,6 +4,7 @@ import numpy as np
 configfile: "workflow/config.yaml"
 
 DATA_DIR = config["data_dir"]
+SIMULATION_DIR = config["simulation_dir"]
 RAW_DIR = j(DATA_DIR, "raw")
 DERIVED_DIR = j(DATA_DIR, "derived")
 SHAPE_FILE_DIR = j(DATA_DIR, "shape_file", "seoul")
@@ -44,7 +45,7 @@ VARIANCE_DATA_BY_PERIOD = j(DERIVED_DATA_BY_PERIOD , "varaince_data.npy")
 ###############################################################################
 # SIMULATION_RESULT
 ###############################################################################
-SIMULATION_RESULT_DIR = j(DERIVED_DATA_BY_PERIOD, "simulation")
+SIMULATION_RESULT_DIR = j(SIMULATION_DIR, "{period}")
 
 SIMULATION_JSD_RESULT = j(SIMULATION_RESULT_DIR, "result")
 SIMULATION_ENTROPY_RESULT= j(SIMULATION_RESULT_DIR, "entropy")
@@ -96,7 +97,6 @@ MAX_VARIANCE = 24
 N_ENTROPY_BIN = 30
 N_VARIANCE_BIN = 30
 
-
 ###############################################################################
 # PARAMS for simulation
 ###############################################################################
@@ -120,7 +120,7 @@ rule all:
         expand(SIMULATION_JSD_RESULT_FILE, period=PERIODS, p=ps, k=ks),
         expand(SIMULATION_ENTROPY_RESULT_FILE, period=PERIODS, p=ps, k=ks),
         expand(SIMULATION_VARIANCE_RESULT_FILE, period=PERIODS, p=ps, k=ks)
-        
+      
 rule generate_sequence:
     input: RAW_SEQUENCE_DATA
     output: sequence=SEQUENCE_BY_PERIOD, sequence_length=SEQUENCE_LENGTH_BY_PERIOD

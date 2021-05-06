@@ -2,6 +2,7 @@ from collections import Counter, defaultdict
 
 import numpy as np
 import pandas as pd
+import s2geometry as s2
 
 INPUT_RAW = snakemake.input.raw
 INPUT_META = snakemake.input.meta
@@ -11,15 +12,6 @@ OUTPUT_HOTSPOT_LEVEL_BY_GRID = snakemake.output.hotspot_level_by_grid
 
 OUTPUT_VENDOR_TO_GRID = snakemake.output.vendor_to_grid
 OUTPUT_VENDOR_TO_HOTSPOT_LEVEL = snakemake.output.vendor_to_hotspot_level
-
-
-n_lat_bin = snakemake.params.n_lat_bin
-n_lon_bin = snakemake.params.n_lon_bin
-
-max_lat = snakemake.params.max_lat
-min_lat = snakemake.params.min_lat
-max_lon = snakemake.params.max_lon
-min_lon = snakemake.params.min_lon
 
 hotspot_level = snakemake.params.hotspot_level
 
@@ -34,47 +26,38 @@ meta_data = pd.read_csv(INPUT_META, sep="|",).set_index("ano")
 
 # get locational info
 vendors = set(data.yg_vendor_code)
-lat_lon_dict = {}
+meta_data = meta_data[meta_data.index.isin(vendors)]
+vendor_to_grid = {}
 for id_, lon, lat in zip(meta_data.index, meta_data.alng, meta_data.alat):
-    lat_lon_dict[id_] = (lat, lon)
-lats = [lat_lon_dict[vendor][0] for vendor in vendors]
-lons = [lat_lon_dict[vendor][1] for vendor in vendors]
-
-
-# make grids
-lat_bins = np.linspace(min_lat, max_lat, n_lat_bin + 1)
-lon_bins = np.linspace(min_lon, max_lon, n_lon_bin + 1)
-lat_digitized = np.digitize(lats, lat_bins) - 1
-lon_digitized = np.digitize(lons, lon_bins) - 1
+    vendor_to_grid[id_] = s2.S2CellId(s2.S2LatLng.FromDegrees(lat, lon)).parent(14).id()
+pd.to_pickle(vendor_to_grid, OUTPUT_VENDOR_TO_GRID)
 
 # count reservation by grid
-reservation_by_grid = np.zeros((n_lon_bin, n_lat_bin))
-frequency_counter = data.yg_vendor_code.value_counts()
-for i, vendor in enumerate(vendors):
-    lat_bin = lat_digitized[i]
-    lon_bin = lon_digitized[i]
-    reservation_by_grid[lon_bin][lat_bin] += frequency_counter[vendor]
-np.save(OUTPUT_RESERVATION_BY_GRID, reservation_by_grid)
+reservation_counter = data.yg_vendor_code.value_counts().to_dict()
+reservation_counter_by_grid = defaultdict(int)
+for k,v in reservation_counter.items():
+    reservation_counter_by_grid[vendor_to_grid[k]] += v
+pd.to_pickle(reservation_counter_by_grid, OUTPUT_RESERVATION_BY_GRID)
 
 # assign hot spot level
-non_zero_values = reservation_by_grid[reservation_by_grid != 0]
-hotspot_level_by_grid = np.zeros((n_lon_bin, n_lat_bin))
-percentiles = np.linspace(0, 100, hotspot_level + 1)
+hot_spot_level = 10
+ks = np.array(list(reservation_counter_by_grid.keys()))
+vals = np.array(list(reservation_counter_by_grid.values()))
+
+hotspot_level_by_grid = {}
+percentiles = np.linspace(0, 100, hot_spot_level + 1)
 for i, per in enumerate(percentiles):
-    th = np.percentile(non_zero_values, per)
+    th = np.percentile(vals, per)
     if i == 0:
         th -= 1
-    hotspot_level_by_grid[reservation_by_grid > th] = i + 1
-hotspot_level_by_grid = 11 - hotspot_level_by_grid
-np.save(OUTPUT_HOTSPOT_LEVEL_BY_GRID, hotspot_level_by_grid)
+    for k in ks[vals > th]:
+        hotspot_level_by_grid[k] = 10 - i
+pd.to_pickle(hotspot_level_by_grid, OUTPUT_HOTSPOT_LEVEL_BY_GRID)
 
 
 # vendor matching data files
-vendor_to_grid = {
-    vendor: (lon_digitized[i], lat_digitized[i]) for i, vendor in enumerate(vendors)
-}
 vendor_to_hotspot_level = {
     vendor: hotspot_level_by_grid[vendor_to_grid[vendor]] for vendor in vendors
 }
-pd.to_pickle(vendor_to_grid, OUTPUT_VENDOR_TO_GRID)
+
 pd.to_pickle(vendor_to_hotspot_level, OUTPUT_VENDOR_TO_HOTSPOT_LEVEL)

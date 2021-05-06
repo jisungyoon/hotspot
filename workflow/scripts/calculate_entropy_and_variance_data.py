@@ -7,7 +7,8 @@ from common import calculate_entropy, calculate_locational_variance, get_pdf
 
 INPUT_SEQUENCE = snakemake.input.sequence
 INPUT_VENDOR_TO_GRID = snakemake.input.vendor_to_grid
-INPUT_HOTSPOT_LEVEL_BY_GRID = snakemake.input.hotspot_level_by_grid
+INPUT_GRID_TO_HOTSPOT_LEVEL = snakemake.input.grid_to_hotspot_level
+INPUT_ROUTING_DISTANCE = snakemake.input.dist
 INPUT_FONT_FILE = snakemake.input.font_file
 
 OUTPUT_ENTROPY = snakemake.output.entropy
@@ -23,13 +24,8 @@ n_variance_bin = snakemake.params.n_variance_bin
 
 sequences = np.load(INPUT_SEQUENCE, allow_pickle=True)
 vendor_to_grid = pd.read_pickle(INPUT_VENDOR_TO_GRID)
-hotspot_level_by_grid = np.load(INPUT_HOTSPOT_LEVEL_BY_GRID)
-grid_to_hotspot_level = {
-    (i, j): val
-    for i, row in enumerate(hotspot_level_by_grid)
-    for j, val in enumerate(row)
-    if val != 11
-}
+grid_to_hotspot_level = pd.read_pickle(INPUT_GRID_TO_HOTSPOT_LEVEL)
+d = pd.read_pickle(INPUT_ROUTING_DISTANCE)
 
 sequences = [list(map(vendor_to_grid.get, row)) for row in sequences]
 
@@ -38,7 +34,7 @@ entropies = calculate_entropy(
     sequences, grid_to_hotspot_level, hotspot_level=hotspot_level
 )
 variances = np.mean(
-    [calculate_locational_variance(sequences) for i in range(10)], axis=0
+    [calculate_locational_variance(sequences, d) for i in range(10)], axis=0
 )
 
 # save result

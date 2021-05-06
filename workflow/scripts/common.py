@@ -19,21 +19,19 @@ def calculate_entropy(given_sequences, grid_to_hotspot_level, hotspot_level=10):
     return entropy_array
 
 
-def calculate_locational_variance(given_sequences):
+def calculate_locational_variance(given_sequences, d):
     var_array = []
     for row in given_sequences:
         counter_dict = dict(Counter(row))
         max_val = max(counter_dict.values())
         max_keys = [k for k, v in counter_dict.items() if v == max_val]
         home = max_keys[np.random.choice(len(max_keys))]
-        x_vars = 0
-        y_vars = 0
+        var = 0
         for k, v in counter_dict.items():
-            x_vars += ((k[0] - home[0]) ** 2) * v
-            y_vars += ((k[1] - home[1]) ** 2) * v
-        var = np.sqrt((x_vars + y_vars) / len(row))
+            if k != home:
+                var += d[home][k] * v
+        var /= len(row)
         var_array.append(var)
-    var_array = np.array(var_array)
 
     return var_array
 
@@ -47,56 +45,32 @@ def get_pdf(points, bins):
 
 
 def generate_sequence(
-    p,
-    k,
-    generated_homes,
-    sequence_length,
-    grid_to_hotspot_level,
-    hotspot_level_to_grid,
-    transition_matrix,
+    p, gamma, k, generated_homes, sequence_length, hotspot_level_to_grid, d,
 ):
+    distribution = np.array([1 / np.power(i + 1, k) for i in range(10)])
+    distribution /= sum(distribution)
+
     generated_sequences = []
     for home, length in zip(generated_homes, sequence_length):
-        home_hotspot_level = int(grid_to_hotspot_level[home])
-        temp_trans_prob = transition_matrix[home_hotspot_level - 1]
-        next_hot_levels = (
-            np.random.choice(
-                np.arange(10), size=int(length / 2), replace=True, p=temp_trans_prob
-            )
-            + 1
-        )
-        next_grids = []
-
-        for level in next_hot_levels:
-            if home_hotspot_level == level:
-                if np.random.random() < p:
-                    next_grid = home
-                else:
-                    next_grid = get_next_grid(home, k, hotspot_level_to_grid[level])
+        next_grids = [home]
+        for i in range(length - 1):
+            if np.random.random() < p:
+                next_grid = np.random.choice(next_grids)
             else:
-                next_grid = get_next_grid(home, k, hotspot_level_to_grid[level])
+                level = np.random.choice(np.arange(10), p=distribution) + 1
+                c = Counter(next_grids)
+                m = max(c.values())
+                home = np.random.choice([key for key in c if c[key] == m])
+                next_grid = get_next_grid(home, gamma, d, hotspot_level_to_grid[level])
             next_grids.append(next_grid)
-
-        temp_sequnece = []
-        for i in range(length):
-            if i % 2 == 0:
-                temp_sequnece.append(home)
-            else:
-                temp_sequnece.append(next_grids.pop())
-        generated_sequences.append(temp_sequnece)
+        generated_sequences.append(next_grids)
 
     return generated_sequences
 
 
-def get_next_grid(home, k, target_grids):
+def get_next_grid(home, gamma, d, target_grids):
     target_grids = [spot for spot in target_grids if spot != home]
-    weight = np.array(
-        [
-            1
-            / np.power(np.sqrt((spot[0] - home[0]) ** 2 + (spot[1] - home[1]) ** 2), k)
-            for spot in target_grids
-        ]
-    )
+    weight = np.array([1 / np.power(d[home][spot], gamma) for spot in target_grids])
     weight = weight / sum(weight)
 
     return target_grids[np.random.choice(np.arange(len(target_grids)), p=weight)]

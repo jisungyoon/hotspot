@@ -17,7 +17,7 @@ OUTPUT_HOME_VALIDATION_FIG = snakemake.output.home_validation_fig
 
 sequences = np.load(INPUT_SEQUENCE, allow_pickle=True)
 vendor_to_grid = pd.read_pickle(INPUT_VENDOR_TO_GRID)
-reservation_by_grid = np.load(INPUT_RESERVATION_BY_GRID)
+reservation_by_grid = pd.read_pickle(INPUT_RESERVATION_BY_GRID)
 
 home_list = []
 for row in sequences:
@@ -30,7 +30,7 @@ for row in sequences:
 # valdiate hypothesis
 home_counter = dict(Counter(home_list))
 xs = [v for k, v in home_counter.items()]
-ys = [reservation_by_grid[k[0]][k[1]] for k, v in home_counter.items()]
+ys = [reservation_by_grid[k] for k, v in home_counter.items()]
 
 prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=22)
 tiny_prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=15)
@@ -60,10 +60,9 @@ plt.savefig(OUTPUT_HOME_VALIDATION_FIG, bbox_inches="tight")
 
 # calculate pdf
 homes_p_dict = {}
-for i, row in enumerate(reservation_by_grid):
-    for j, val in enumerate(row):
-        if val > 0:
-            homes_p_dict[(i, j)] = val
+for k, v in reservation_by_grid.items():
+    if v > 0:
+        homes_p_dict[k] = v
 
 total_sum = sum(homes_p_dict.values())
 for k, v in homes_p_dict.items():

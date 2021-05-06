@@ -25,12 +25,18 @@ max_variance = snakemake.params.max_variance
 n_entropy_bin = snakemake.params.n_entropy_bin
 n_variance_bin = snakemake.params.n_variance_bin
 
-p = float(snakemake.wildcards.p)
-k = float(snakemake.wildcards.k)
-gamma = 1
+optimal_p_k_config = {
+    "before": (0.4, 2.1),
+    "after": (0.44, 2.175),
+}  # need to update, if you want to find gamma for given data.
+
+p, k = optimal_p_k_config[snakemake.wildcards.period]
+gamma = float(snakemake.wildcards.gamma)
+
 
 repetition = int(snakemake.params.repetition)
 
+print(p, k, gamma)
 
 home_pdf = pd.read_pickle(INPUT_HOME_PDF)
 sequence_length = np.load(INPUT_SEQUENCE_LENGTH, allow_pickle=True)

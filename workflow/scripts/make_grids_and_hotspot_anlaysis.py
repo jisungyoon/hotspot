@@ -35,7 +35,7 @@ pd.to_pickle(vendor_to_grid, OUTPUT_VENDOR_TO_GRID)
 # count reservation by grid
 reservation_counter = data.yg_vendor_code.value_counts().to_dict()
 reservation_counter_by_grid = defaultdict(int)
-for k,v in reservation_counter.items():
+for k, v in reservation_counter.items():
     reservation_counter_by_grid[vendor_to_grid[k]] += v
 pd.to_pickle(reservation_counter_by_grid, OUTPUT_RESERVATION_BY_GRID)
 

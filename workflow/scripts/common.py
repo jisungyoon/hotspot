@@ -29,10 +29,10 @@ def calculate_locational_variance(given_sequences, d):
         var = 0
         for k, v in counter_dict.items():
             if k != home:
-                var += d[home][k] * v 
+                var += d[home][k] * v
         var /= len(row)
         var_array.append(var)
-    
+
     return var_array
 
 
@@ -45,15 +45,9 @@ def get_pdf(points, bins):
 
 
 def generate_sequence(
-    p,
-    gamma,
-    k,
-    generated_homes,
-    sequence_length,
-    hotspot_level_to_grid,
-    d,
+    p, gamma, k, generated_homes, sequence_length, hotspot_level_to_grid, d,
 ):
-    distribution = np.array([1/np.power(i + 1, k) for i in range(10)])
+    distribution = np.array([1 / np.power(i + 1, k) for i in range(10)])
     distribution /= sum(distribution)
 
     generated_sequences = []
@@ -73,15 +67,10 @@ def generate_sequence(
 
     return generated_sequences
 
+
 def get_next_grid(home, gamma, d, target_grids):
     target_grids = [spot for spot in target_grids if spot != home]
-    weight = np.array(
-        [
-            1
-            / np.power(d[home][spot], gamma)
-            for spot in target_grids
-        ]
-    )
+    weight = np.array([1 / np.power(d[home][spot], gamma) for spot in target_grids])
     weight = weight / sum(weight)
 
     return target_grids[np.random.choice(np.arange(len(target_grids)), p=weight)]

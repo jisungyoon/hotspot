@@ -56,20 +56,15 @@ for i in range(repetition):
     )
     generated_homes = [homes[idx] for idx in generated_homes_idx]
     generated_sequences = generate_sequence(
-        p,
-        gamma,
-        k,
-        generated_homes,
-        sequence_length,
-        hotspot_level_to_grid,
-        d,
+        p, gamma, k, generated_homes, sequence_length, hotspot_level_to_grid, d,
     )
 
     entropies = calculate_entropy(
         generated_sequences, grid_to_hotspot_level, hotspot_level=hotspot_level
     )
     variances = np.mean(
-        [calculate_locational_variance(generated_sequences, d) for i in range(10)], axis=0
+        [calculate_locational_variance(generated_sequences, d) for i in range(10)],
+        axis=0,
     )
     entropies_array.append(entropies)
     variances_array.append(variances)

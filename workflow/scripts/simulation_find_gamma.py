@@ -26,18 +26,17 @@ n_entropy_bin = snakemake.params.n_entropy_bin
 n_variance_bin = snakemake.params.n_variance_bin
 
 optimal_p_k_config = {
-    'before': (0.4, 2.1),
-    'after': (0.44, 2.175)
-    
-} # need to update, if you want to find gamma for given data.
-    
+    "before": (0.4, 2.1),
+    "after": (0.44, 2.175),
+}  # need to update, if you want to find gamma for given data.
+
 p, k = optimal_p_k_config[snakemake.wildcards.period]
 gamma = float(snakemake.wildcards.gamma)
 
 
 repetition = int(snakemake.params.repetition)
 
-print(p,k, gamma)
+print(p, k, gamma)
 
 home_pdf = pd.read_pickle(INPUT_HOME_PDF)
 sequence_length = np.load(INPUT_SEQUENCE_LENGTH, allow_pickle=True)
@@ -63,20 +62,15 @@ for i in range(repetition):
     )
     generated_homes = [homes[idx] for idx in generated_homes_idx]
     generated_sequences = generate_sequence(
-        p,
-        gamma,
-        k,
-        generated_homes,
-        sequence_length,
-        hotspot_level_to_grid,
-        d,
+        p, gamma, k, generated_homes, sequence_length, hotspot_level_to_grid, d,
     )
 
     entropies = calculate_entropy(
         generated_sequences, grid_to_hotspot_level, hotspot_level=hotspot_level
     )
     variances = np.mean(
-        [calculate_locational_variance(generated_sequences, d) for i in range(10)], axis=0
+        [calculate_locational_variance(generated_sequences, d) for i in range(10)],
+        axis=0,
     )
     entropies_array.append(entropies)
     variances_array.append(variances)

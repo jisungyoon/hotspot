@@ -36,7 +36,7 @@ for row in sequences:
         prev_level = cur_level
         prev_grid = cur_grid
 
-normed_hotspot_matrix = hotspot_matrix/np.sum(hotspot_matrix)
+normed_hotspot_matrix = hotspot_matrix / np.sum(hotspot_matrix)
 # draw hot spot trasition matrix
 prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=22)
 small_prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=20)
@@ -103,10 +103,10 @@ for label in cbar.ax.get_yticklabels():
     label.set_fontproperties(tiny_prop)
 plt.savefig(OUTPUT_NULL_HOTSPOT_MATRIX_FIG, bbox_inches="tight")
 
-f = plt.figure(figsize=(6.2,5.6))
+f = plt.figure(figsize=(6.2, 5.6))
 ax = f.add_axes([0.17, 0.02, 0.72, 0.79])
 axcolor = f.add_axes([0.93, 0.02, 0.03, 0.79])
-im = ax.matshow(normed_hotspot_matrix/normed_null_hotspot_matrix, cmap=cm.Blues)
+im = ax.matshow(normed_hotspot_matrix / normed_null_hotspot_matrix, cmap=cm.Blues)
 cbar = f.colorbar(im, cax=axcolor)
 
 ax.set_xticks(np.arange(0, 10))

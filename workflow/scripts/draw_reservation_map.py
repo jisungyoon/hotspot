@@ -1,13 +1,14 @@
 import geopandas as gpd
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
 import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import s2geometry as s2
 from matplotlib import cm, figure, font_manager
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Polygon
 from pyproj import Proj, transform
 from shapely.geometry import Polygon
-from matplotlib.collections import PatchCollection
-import s2geometry as s2
 
 INPUT_HOTSPOT_LEVEL_BY_GRID = snakemake.input.hotspot_level_by_grid
 
@@ -44,7 +45,7 @@ seoul_shp["geometry"] = seoul_shp.apply(
     lambda x: transform_polygon(x, mode="geo"), axis=1
 )
 
-from matplotlib.patches import Polygon
+
 patches = []
 for id_ in cell_ids:
     cell = s2.S2Cell(s2.S2CellId(id_))
@@ -52,12 +53,11 @@ for id_ in cell_ids:
     for i in range(0, 4):
         vertex = cell.GetVertex(i)
         latlng = s2.S2LatLng(vertex)
-        vertices.append([latlng.lng().degrees(),
-                         latlng.lat().degrees()])
+        vertices.append([latlng.lng().degrees(), latlng.lat().degrees()])
         print(vertices)
     patches.append(Polygon(vertices, True))
-    
-    
+
+
 prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=22)
 small_prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=18)
 
@@ -66,8 +66,7 @@ ax = f.add_axes([0.17, 0, 0.7, 0.7])
 cax = f.add_axes([0.88, 0.04, 0.03, 0.62])
 
 cmap = cm.get_cmap("Blues_r", 10)
-seoul_shp.plot(ax=ax, color="black", edgecolor='darkgrey', alpha=0.1
-)
+seoul_shp.plot(ax=ax, color="black", edgecolor="darkgrey", alpha=0.1)
 p = PatchCollection(patches, cmap=cmap)
 
 colors = [hotspot_info[id_] for id_ in cell_ids]
@@ -75,16 +74,19 @@ p.set_array(np.array(colors))
 ax.add_collection(p)
 
 ax.set_xlim(126.82, 127.15)
-ax.set_ylim(37.44,37.70)
+ax.set_ylim(37.44, 37.70)
 ax.axis("off")
 
-norm = matplotlib.colors.BoundaryNorm(np.array(list(range(0,11))) + 0.5, 11)
-cbar = matplotlib.colorbar.ColorbarBase(cax, cmap=cmap,
-                                norm=norm,
-                                ticks=[np.arange(1, 11)],
-                                spacing='proportional',
-                                orientation='vertical')
-cbar.set_label('Hotspot Level', fontproperties=prop)
+norm = matplotlib.colors.BoundaryNorm(np.array(list(range(0, 11))) + 0.5, 11)
+cbar = matplotlib.colorbar.ColorbarBase(
+    cax,
+    cmap=cmap,
+    norm=norm,
+    ticks=[np.arange(1, 11)],
+    spacing="proportional",
+    orientation="vertical",
+)
+cbar.set_label("Hotspot Level", fontproperties=prop)
 cbar.ax.invert_yaxis()
 for label in cbar.ax.get_yticklabels():
     label.set_fontproperties(small_prop)

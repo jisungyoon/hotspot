@@ -96,9 +96,9 @@ ax2.plot(
 )
 ax2.set_xlabel("Radius of recreational activity", fontproperties=prop)
 
-for ax in [ax1,ax2]:
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
+for ax in [ax1, ax2]:
+    ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
 
 plt.legend(prop=prop, frameon=False)
 

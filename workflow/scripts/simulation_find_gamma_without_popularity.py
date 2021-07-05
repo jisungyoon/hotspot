@@ -62,7 +62,13 @@ for i in range(repetition):
     )
     generated_homes = [homes[idx] for idx in generated_homes_idx]
     generated_sequences = generate_sequence(
-        p, gamma, k, generated_homes, sequence_length, hotspot_level_to_grid, d,
+        p,
+        gamma,
+        k,
+        generated_homes,
+        sequence_length,
+        hotspot_level_to_grid,
+        d,
     )
 
     entropies = calculate_entropy(

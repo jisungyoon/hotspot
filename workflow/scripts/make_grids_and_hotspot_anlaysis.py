@@ -22,7 +22,10 @@ data = data[data.order_cnt > 0]  # using only valid reservation
 data = data[data.uno2 != 0.0]  # remove Non-Members
 
 # Import meta_data
-meta_data = pd.read_csv(INPUT_META, sep="|",).set_index("ano")
+meta_data = pd.read_csv(
+    INPUT_META,
+    sep="|",
+).set_index("ano")
 
 # get locational info
 vendors = set(data.yg_vendor_code)

@@ -1,33 +1,26 @@
 import geopandas as gpd
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import s2geometry as s2
 from matplotlib import cm, figure, font_manager
-from matplotlib.colors import LogNorm
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Polygon
 from pyproj import Proj, transform
 from shapely.geometry import Polygon
 
-INPUT_RESERVATION_BY_GRID = snakemake.input.reservation_by_grid
 INPUT_HOTSPOT_LEVEL_BY_GRID = snakemake.input.hotspot_level_by_grid
 
 INPUT_SHAPE_FILE = snakemake.input.shape_file
 INPUT_FONT_FILE = snakemake.input.font_file
 
-OUTPUT_RESERVATION_MAP = snakemake.output.reservation_map
 OUTPUT_HOTSPOT_MAP = snakemake.output.hotspot_map
 
 
-n_lat_bin = snakemake.params.n_lat_bin
-n_lon_bin = snakemake.params.n_lon_bin
-
-max_lat = snakemake.params.max_lat
-min_lat = snakemake.params.min_lat
-max_lon = snakemake.params.max_lon
-min_lon = snakemake.params.min_lon
-
-
 # Import data
-reservation_by_grid = np.load(INPUT_RESERVATION_BY_GRID)
-hotspot_level_by_grid = np.load(INPUT_HOTSPOT_LEVEL_BY_GRID)
+hotspot_info = pd.read_pickle(INPUT_HOTSPOT_LEVEL_BY_GRID)
+cell_ids = list(map(int, list(hotspot_info.keys())))
 
 # Load shape file
 seoul_shp = gpd.read_file(INPUT_SHAPE_FILE)
@@ -49,53 +42,53 @@ def transform_polygon(x, mode="geo"):
 
 # transform geo-encoding
 seoul_shp["geometry"] = seoul_shp.apply(
-    lambda x: transform_polygon(x, mode="grid"), axis=1
+    lambda x: transform_polygon(x, mode="geo"), axis=1
 )
 
-# draw reservation map
+
+patches = []
+for id_ in cell_ids:
+    cell = s2.S2Cell(s2.S2CellId(id_))
+    vertices = []
+    for i in range(0, 4):
+        vertex = cell.GetVertex(i)
+        latlng = s2.S2LatLng(vertex)
+        vertices.append([latlng.lng().degrees(), latlng.lat().degrees()])
+        print(vertices)
+    patches.append(Polygon(vertices, True))
+
+
 prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=22)
 small_prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=18)
 
 f = plt.figure(figsize=(6.2, 5.6))
-ax = f.add_axes([0.17, 0.02, 0.72, 0.79])
-axcolor = f.add_axes([0.93, 0.02, 0.03, 0.79])
-
-seoul_shp.plot(ax=ax, color="black", edgecolor="grey", alpha=0.1)
-im = ax.pcolormesh(reservation_by_grid.T, cmap=cm.Blues, norm=LogNorm())
-ax.set_xlim([0, 30])
-ax.set_ylim([0, 30])
-ax.axis("off")
-
-cbar = f.colorbar(im, cax=axcolor)
-for label in cbar.ax.get_yticklabels():
-    label.set_fontproperties(small_prop)
-cbar.ax.set_ylabel("Reservation", fontproperties=prop)
-
-plt.savefig(OUTPUT_RESERVATION_MAP, bbox_inches="tight")
-
-
-# draw hotspot map
-masked_hotspot_level_by_grid = np.ma.masked_where(
-    hotspot_level_by_grid == 11, hotspot_level_by_grid
-)
-
-f = plt.figure(figsize=(6.2, 5.6))
-ax = f.add_axes([0.17, 0.02, 0.72, 0.79])
-axcolor = f.add_axes([0.90, 0.02, 0.03, 0.79])
+ax = f.add_axes([0.17, 0, 0.7, 0.7])
+cax = f.add_axes([0.88, 0.04, 0.03, 0.62])
 
 cmap = cm.get_cmap("Blues_r", 10)
-seoul_shp.plot(ax=ax, color="black", edgecolor="grey", alpha=0.1)
-im = ax.pcolormesh(masked_hotspot_level_by_grid.T, cmap=cmap, vmin=0.5, vmax=10.5)
-ax.set_xlim([0, 30])
-ax.set_ylim([0, 30])
+seoul_shp.plot(ax=ax, color="black", edgecolor="darkgrey", alpha=0.1)
+p = PatchCollection(patches, cmap=cmap)
+
+colors = [hotspot_info[id_] for id_ in cell_ids]
+p.set_array(np.array(colors))
+ax.add_collection(p)
+
+ax.set_xlim(126.82, 127.15)
+ax.set_ylim(37.44, 37.70)
 ax.axis("off")
 
-cbar = f.colorbar(im, cax=axcolor, ticks=np.arange(1, 11))
+norm = matplotlib.colors.BoundaryNorm(np.array(list(range(0, 11))) + 0.5, 11)
+cbar = matplotlib.colorbar.ColorbarBase(
+    cax,
+    cmap=cmap,
+    norm=norm,
+    ticks=[np.arange(1, 11)],
+    spacing="proportional",
+    orientation="vertical",
+)
+cbar.set_label("Hotspot Level", fontproperties=prop)
 cbar.ax.invert_yaxis()
 for label in cbar.ax.get_yticklabels():
     label.set_fontproperties(small_prop)
-cbar.ax.set_ylabel("Hotspot Level", fontproperties=prop)
 
 plt.savefig(OUTPUT_HOTSPOT_MAP, bbox_inches="tight")
-
-f.show()

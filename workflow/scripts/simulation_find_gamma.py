@@ -26,8 +26,8 @@ n_entropy_bin = snakemake.params.n_entropy_bin
 n_variance_bin = snakemake.params.n_variance_bin
 
 optimal_p_k_config = {
-    "before": (0.4, 2.1),
-    "after": (0.44, 2.175),
+    "before": (0.84, 2.15),
+    "after": (0.84, 2.25),
 }  # need to update, if you want to find gamma for given data.
 
 p, k = optimal_p_k_config[snakemake.wildcards.period]
@@ -62,7 +62,13 @@ for i in range(repetition):
     )
     generated_homes = [homes[idx] for idx in generated_homes_idx]
     generated_sequences = generate_sequence(
-        p, gamma, k, generated_homes, sequence_length, hotspot_level_to_grid, d,
+        p,
+        gamma,
+        k,
+        generated_homes,
+        sequence_length,
+        hotspot_level_to_grid,
+        d,
     )
 
     entropies = calculate_entropy(

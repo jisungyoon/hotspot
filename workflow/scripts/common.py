@@ -29,9 +29,9 @@ def calculate_locational_variance(given_sequences, d):
         var = 0
         for k, v in counter_dict.items():
             if k != home:
-                var += d[home][k] * v
+                var += (d[home][k] ** 2) * v
         var /= len(row)
-        var_array.append(var)
+        var_array.append(np.sqrt(var))
 
     return var_array
 
@@ -45,7 +45,13 @@ def get_pdf(points, bins):
 
 
 def generate_sequence(
-    p, gamma, k, generated_homes, sequence_length, hotspot_level_to_grid, d,
+    p,
+    gamma,
+    k,
+    generated_homes,
+    sequence_length,
+    hotspot_level_to_grid,
+    d,
 ):
     distribution = np.array([1 / np.power(i + 1, k) for i in range(10)])
     distribution /= sum(distribution)
@@ -54,7 +60,7 @@ def generate_sequence(
     for home, length in zip(generated_homes, sequence_length):
         next_grids = [home]
         for i in range(length - 1):
-            if np.random.random() < p:
+            if np.random.random() < 1 - np.power(p, 1 + i):
                 next_grid = np.random.choice(next_grids)
             else:
                 level = np.random.choice(np.arange(10), p=distribution) + 1

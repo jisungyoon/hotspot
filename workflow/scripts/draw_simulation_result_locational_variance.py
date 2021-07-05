@@ -71,7 +71,7 @@ ax1.plot(
     color="cornflowerblue",
     label="Post-COVID-19",
 )
-ax1.set_ylabel(r"Locational Variance JSD", fontproperties=prop)
+ax1.set_ylabel(r"Radius of recretional activity JSD", fontproperties=prop)
 fig.text(0.52, 0.02, r"$\gamma$", ha="center", fontproperties=prop)
 
 plt.legend(fontsize=18, frameon=False)

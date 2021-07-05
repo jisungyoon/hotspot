@@ -56,7 +56,7 @@ ax1.plot(
     markersize=0,
     color="tab:orange",
     alpha=0.7,
-    label="Pre COVID-19",
+    label="Pre-COVID-19",
 )
 ax1.plot(
     ent_xs,
@@ -67,9 +67,9 @@ ax1.plot(
     markersize=0,
     color="tab:blue",
     alpha=0.7,
-    label="Post COVID-19",
+    label="Post-COVID-19",
 )
-ax1.set_xlabel("Entropy", fontproperties=prop)
+ax1.set_xlabel("Hotspot entropy", fontproperties=prop)
 ax1.set_ylabel("PDF", fontproperties=prop)
 
 ax2.plot(
@@ -81,7 +81,7 @@ ax2.plot(
     markersize=0,
     color="tab:orange",
     alpha=0.7,
-    label="Pre COVID-19",
+    label="Pre-COVID-19",
 )
 ax2.plot(
     var_xs,
@@ -92,9 +92,13 @@ ax2.plot(
     markersize=0,
     color="tab:blue",
     alpha=0.7,
-    label="Post COVID-19",
+    label="Post-COVID-19",
 )
-ax2.set_xlabel("Locational Variance", fontproperties=prop)
+ax2.set_xlabel("Radius of recreational activity", fontproperties=prop)
+
+for ax in [ax1,ax2]:
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
 
 plt.legend(prop=prop, frameon=False)
 

@@ -78,13 +78,13 @@ fig.text(0.465, 0.02, r"$k$", ha="center", fontproperties=prop)
 
 min_p, min_k = np.unravel_index(ent_jsds_before.argmin(), ent_jsds_before.shape)
 ax1.plot(min_k, min_p, "r+", markersize=20)
-ax1.text(62, 46, r"$p^*={0:.3f}$".format(before_best_p), fontproperties=prop)
-ax1.text(62, 41, r"$k^*={0:.3f}$".format(before_best_k), fontproperties=prop)
+ax1.text(62, 7.5, r"$p^*={0:.3f}$".format(before_best_p), fontproperties=prop)
+ax1.text(62, 2, r"$k^*={0:.3f}$".format(before_best_k), fontproperties=prop)
 
 min_p, min_k = np.unravel_index(ent_jsds_after.argmin(), ent_jsds_after.shape)
 ax2.plot(min_k, min_p, "r+", markersize=20)
-ax2.text(62, 46, r"$p^*={0:.3f}$".format(after_best_p), fontproperties=prop)
-ax2.text(62, 41, r"$k^*={0:.3f}$".format(after_best_k), fontproperties=prop)
+ax2.text(62, 7.5, r"$p^*={0:.3f}$".format(after_best_p), fontproperties=prop)
+ax2.text(62, 2, r"$k^*={0:.3f}$".format(after_best_k), fontproperties=prop)
 
 fig.subplots_adjust(right=0.8)
 cbar_ax = fig.add_axes([0.83, 0.125, 0.015, 0.755])

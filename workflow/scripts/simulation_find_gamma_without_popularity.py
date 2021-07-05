@@ -26,8 +26,8 @@ n_entropy_bin = snakemake.params.n_entropy_bin
 n_variance_bin = snakemake.params.n_variance_bin
 
 optimal_p_k_config = {
-    "before": (0.84, 2.15),
-    "after": (0.84, 2.25),
+    "before": (0.58, 0),
+    "after": (0.56, 0),
 }  # need to update, if you want to find gamma for given data.
 
 p, k = optimal_p_k_config[snakemake.wildcards.period]

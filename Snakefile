@@ -15,6 +15,7 @@ SHAPE_FILE_DIR = j(DATA_DIR, "shape_file", "seoul")
 FIGURE_DIR = config["figs_dir"]
 ASSETS_DIR = config["assets_dir"]
 
+FIG_FORMAT = 'pdf'
 ###############################################################################
 # RAW_DATA
 ###############################################################################
@@ -76,6 +77,18 @@ SIMULATION_VARIANCE_RESULT_FILE_BY_GAMMA = j(
     SIMULATION_RESULT_DIR_BY_GAMMA, "variance", "variance_{gamma}.npy"
 )
 
+SIMULATION_RESULT_DIR_BY_GAMMA_WITHOUT_POPULARITY = j(SIMULATION_RESULT_DIR, "without_popularity")
+
+SIMULATION_JSD_RESULT_FILE_BY_GAMMA_WITHOUT_POPULARITY = j(
+    SIMULATION_RESULT_DIR_BY_GAMMA_WITHOUT_POPULARITY, "result", "result_{gamma}.csv"
+)
+SIMULATION_ENTROPY_RESULT_FILE_BY_GAMMA_WITHOUT_POPULARITY = j(
+    SIMULATION_RESULT_DIR_BY_GAMMA_WITHOUT_POPULARITY, "entropy", "entropy_{gamma}.npy"
+)
+SIMULATION_VARIANCE_RESULT_FILE_BY_GAMMA_WITHOUT_POPULARITY = j(
+    SIMULATION_RESULT_DIR_BY_GAMMA_WITHOUT_POPULARITY, "variance", "variance_{gamma}.npy"
+)
+
 
 ###############################################################################
 # ASSETS
@@ -87,20 +100,20 @@ NORMAL_FONT_PATH = j(ASSETS_DIR, "Helvetica.ttf")
 ###############################################################################
 FIGS_BY_PERIOD = j(FIGURE_DIR, "{period}")
 
-RESERVATION_MAP_BY_PERIOD = j(FIGS_BY_PERIOD, "reservation_map.pdf")
-HOTSPOT_MAP_BY_PERIOD = j(FIGS_BY_PERIOD, "hotspot_map.pdf")
+HOTSPOT_MAP_BY_PERIOD = j(FIGS_BY_PERIOD, "hotspot_map.{}".format(FIG_FORMAT))
 
-HOTSPOT_MATRIX_FIG_BY_PERIOD = j(FIGS_BY_PERIOD, "hotspot_matrix.pdf")
-NULL_HOTSPOT_MATRIX_FIG_BY_PERIOD = j(FIGS_BY_PERIOD, "null_hotspot_matrix.pdf")
-RATIO_FIG_BY_PERIOD = j(FIGS_BY_PERIOD, "ratio_matrix.pdf")
+HOTSPOT_MATRIX_FIG_BY_PERIOD = j(FIGS_BY_PERIOD, "hotspot_matrix.{}".format(FIG_FORMAT))
+NULL_HOTSPOT_MATRIX_FIG_BY_PERIOD = j(FIGS_BY_PERIOD, "null_hotspot_matrix.{}".format(FIG_FORMAT))
+RATIO_FIG_BY_PERIOD = j(FIGS_BY_PERIOD, "ratio_matrix.{}".format(FIG_FORMAT))
 
-HOME_VALIDATION_BY_PERIOD = j(FIGS_BY_PERIOD, "home_validation.pdf")
+HOME_VALIDATION_BY_PERIOD = j(FIGS_BY_PERIOD, "home_validation.{}".format(FIG_FORMAT))
 
-ENT_VAR_BY_PERIOD = j(FIGS_BY_PERIOD, "entropy_variance_data.pdf")
-OVERLAP_ENT_VAR = j(FIGURE_DIR, "entropy_variance_data_overlap.pdf")
+ENT_VAR_BY_PERIOD = j(FIGS_BY_PERIOD, "entropy_variance_data.{}".format(FIG_FORMAT))
+OVERLAP_ENT_VAR = j(FIGURE_DIR, "entropy_variance_data_overlap.{}".format(FIG_FORMAT))
 
-SIMULATION_FIG_BY_PK = j(FIGURE_DIR, "simulation_by_pk.pdf")
-SIMULATION_FIG_BY_GAMMA = j(FIGURE_DIR, "simulation_by_gamma.pdf")
+SIMULATION_FIG_BY_PK = j(FIGURE_DIR, "simulation_by_pk.{}".format(FIG_FORMAT))
+SIMULATION_FIG_BY_GAMMA = j(FIGURE_DIR, "simulation_by_gamma.{}".format(FIG_FORMAT))
+SIMULATION_FIG_BY_GAMMA_WITHOUT_POPULARITY = j(FIGURE_DIR, "simulation_by_gamma_without_popularity.{}".format(FIG_FORMAT))
 
 
 ###############################################################################
@@ -134,9 +147,13 @@ gammas = [np.round(x, 2) for x in np.linspace(0, 5, 201)]
 
 rule all:
     input:
+        expand(HOTSPOT_MAP_BY_PERIOD, period=PERIODS),
+        expand(HOTSPOT_MATRIX_FIG_BY_PERIOD, period=PERIODS),
+        expand(NULL_HOTSPOT_MATRIX_FIG_BY_PERIOD, period=PERIODS),
         OVERLAP_ENT_VAR,
         SIMULATION_FIG_BY_PK,
         SIMULATION_FIG_BY_GAMMA,
+        SIMULATION_FIG_BY_GAMMA_WITHOUT_POPULARITY
 
 
 rule generate_sequence:
@@ -168,6 +185,17 @@ rule hotspot_analysis:
         hotspot_level=HOTSPOT_LEVEL,
     script:
         "workflow/scripts/make_grids_and_hotspot_anlaysis.py"
+  
+rule draw_hotspot_map:
+    input:
+        hotspot_level_by_grid=GRID_HOTSPOT_LEVEL_BY_PERIOD,
+        shape_file=SHAPE_FILE,
+        font_file=NORMAL_FONT_PATH,
+    output:
+        hotspot_map=HOTSPOT_MAP_BY_PERIOD
+    script:
+        "workflow/scripts/draw_reservation_map.py"      
+        
 
 
 rule calculate_transition_matrix_and_psi:
@@ -322,6 +350,45 @@ rule draw_simulation_result_by_gamma:
         font_file=NORMAL_FONT_PATH,
     output:
         simulation_fig_by_gamma=SIMULATION_FIG_BY_GAMMA,
+    params:
+        gammas=gammas,
+    script:
+        "workflow/scripts/draw_simulation_result_locational_variance.py"
+        
+        
+rule simulation_by_gamma_without_popularity:
+    input:
+        home_pdf=HOME_PDF_BY_PERIOD,
+        sequence_length=SEQUENCE_LENGTH_BY_PERIOD,
+        hotspot_level_by_grid=GRID_HOTSPOT_LEVEL_BY_PERIOD,
+        entropy_data=ENTROPY_DATA_BY_PERIOD,
+        variance_data=VARIANCE_DATA_BY_PERIOD,
+        dist=DISTANCE,
+    output:
+        jsd=SIMULATION_JSD_RESULT_FILE_BY_GAMMA_WITHOUT_POPULARITY,
+        entropy=SIMULATION_ENTROPY_RESULT_FILE_BY_GAMMA_WITHOUT_POPULARITY,
+        variance=SIMULATION_VARIANCE_RESULT_FILE_BY_GAMMA_WITHOUT_POPULARITY,
+    params:
+        hotspot_level=HOTSPOT_LEVEL,
+        max_entropy=MAX_ENTROPY,
+        max_variance=MAX_VARIANCE,
+        n_entropy_bin=N_ENTROPY_BIN,
+        n_variance_bin=N_VARIANCE_BIN,
+        repetition=REPTITION,
+    script:
+        "workflow/scripts/simulation_find_gamma_without_popularity.py"
+        
+rule draw_simulation_result_by_gamma_without_popularity:
+    input:
+        before_files=expand(
+            SIMULATION_JSD_RESULT_FILE_BY_GAMMA_WITHOUT_POPULARITY, period=["before"], gamma=gammas
+        ),
+        after_files=expand(
+            SIMULATION_JSD_RESULT_FILE_BY_GAMMA_WITHOUT_POPULARITY, period=["after"], gamma=gammas
+        ),
+        font_file=NORMAL_FONT_PATH,
+    output:
+        simulation_fig_by_gamma=SIMULATION_FIG_BY_GAMMA_WITHOUT_POPULARITY,
     params:
         gammas=gammas,
     script:

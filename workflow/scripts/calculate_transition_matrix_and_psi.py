@@ -103,28 +103,51 @@ for label in cbar.ax.get_yticklabels():
     label.set_fontproperties(tiny_prop)
 plt.savefig(OUTPUT_NULL_HOTSPOT_MATRIX_FIG, bbox_inches="tight")
 
-f = plt.figure(figsize=(6.2, 5.6))
-ax = f.add_axes([0.17, 0.02, 0.72, 0.79])
-axcolor = f.add_axes([0.93, 0.02, 0.03, 0.79])
-im = ax.matshow(normed_hotspot_matrix / normed_null_hotspot_matrix, cmap=cm.Blues)
-cbar = f.colorbar(im, cax=axcolor)
+annot_prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=10)
 
-ax.set_xticks(np.arange(0, 10))
+import seaborn as sns
+
+sns.set_theme()
+
+ratio_mtx = normed_hotspot_matrix / normed_null_hotspot_matrix
+
+annot = []
+for x_row,y_row in zip (ratio_mtx, hotspot_matrix):
+    temp = []
+    for x,y in zip(x_row, y_row):
+        temp.append("{}".format(np.round(x,2)) + "\n" "$10^{{{}}}$".format(np.round(np.log10(y), 1)))
+    annot.append(temp)
+
+f, ax = plt.subplots(figsize=(7, 7))
+sns.heatmap(ratio_mtx, annot=annot, linewidths=.05, ax=ax, cmap=cm.Blues, square=True, cbar=False, fmt='', annot_kws={"size": 35 / np.sqrt(len(ratio_mtx))},)
+
+ax.set_xticks(np.arange(0, 10) + 0.5)
 ax.set_xticklabels(np.arange(1, 11))
-ax.set_yticks(np.arange(0, 10))
+ax.set_yticks(np.arange(0, 10) + 0.5)
 ax.set_yticklabels(np.arange(1, 11))
-ax.set_ylim((9.5, -0.5))
 
-ax.set_ylabel("Hotspot level", fontproperties=prop)
-ax.set_title("Hotspot level", fontproperties=prop, y=1.1)
+ax.axhline(y=0, color='k',linewidth=0.5)
+ax.axhline(y=ratio_mtx.shape[1]- 0.03, color='k',linewidth=0.5)
+ax.axvline(x=0, color='k',linewidth=0.5)
+ax.axvline(x=ratio_mtx.shape[0] - 0.03, color='k',linewidth=0.5)
+
+plt.yticks(rotation = 'horizontal')
+ax.xaxis.set_ticks_position('top')
+ax.tick_params(axis='x', which=u'both',color='white', length=2)
+ax.tick_params(axis='y', which=u'both',color='white', length=3)
+
+ax.set_ylabel("Hotspot level", fontproperties=prop, labelpad=0)
+ax.set_title("Hotspot level", fontproperties=prop, y=1.08)
+
+for t in ax.texts:
+    t.set_fontproperties(annot_prop)
+
+
 for label in ax.get_xticklabels():
     label.set_fontproperties(small_prop)
 for label in ax.get_yticklabels():
     label.set_fontproperties(small_prop)
-
-cbar.ax.set_ylabel("Ratio", fontproperties=prop, labelpad=10)
-for label in cbar.ax.get_yticklabels():
-    label.set_fontproperties(tiny_prop)
+    
 
 plt.savefig(OUTPUT_RATIO_FIG, bbox_inches="tight")
 

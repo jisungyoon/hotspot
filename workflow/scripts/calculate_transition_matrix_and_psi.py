@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from matplotlib import cm, font_manager
 from matplotlib.colors import LogNorm
 
@@ -105,36 +106,48 @@ plt.savefig(OUTPUT_NULL_HOTSPOT_MATRIX_FIG, bbox_inches="tight")
 
 annot_prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=10)
 
-import seaborn as sns
 
 sns.set_theme()
 
 ratio_mtx = normed_hotspot_matrix / normed_null_hotspot_matrix
 
 annot = []
-for x_row,y_row in zip (ratio_mtx, hotspot_matrix):
+for x_row, y_row in zip(ratio_mtx, hotspot_matrix):
     temp = []
-    for x,y in zip(x_row, y_row):
-        temp.append("{}".format(np.round(x,2)) + "\n" "$10^{{{}}}$".format(np.round(np.log10(y), 1)))
+    for x, y in zip(x_row, y_row):
+        temp.append(
+            "{}".format(np.round(x, 2)) + "\n"
+            "$10^{{{}}}$".format(np.round(np.log10(y), 1))
+        )
     annot.append(temp)
 
 f, ax = plt.subplots(figsize=(7, 7))
-sns.heatmap(ratio_mtx, annot=annot, linewidths=.05, ax=ax, cmap=cm.Blues, square=True, cbar=False, fmt='', annot_kws={"size": 35 / np.sqrt(len(ratio_mtx))},)
+sns.heatmap(
+    ratio_mtx,
+    annot=annot,
+    linewidths=0.05,
+    ax=ax,
+    cmap=cm.Blues,
+    square=True,
+    cbar=False,
+    fmt="",
+    annot_kws={"size": 35 / np.sqrt(len(ratio_mtx))},
+)
 
 ax.set_xticks(np.arange(0, 10) + 0.5)
 ax.set_xticklabels(np.arange(1, 11))
 ax.set_yticks(np.arange(0, 10) + 0.5)
 ax.set_yticklabels(np.arange(1, 11))
 
-ax.axhline(y=0, color='k',linewidth=0.5)
-ax.axhline(y=ratio_mtx.shape[1]- 0.03, color='k',linewidth=0.5)
-ax.axvline(x=0, color='k',linewidth=0.5)
-ax.axvline(x=ratio_mtx.shape[0] - 0.03, color='k',linewidth=0.5)
+ax.axhline(y=0, color="k", linewidth=0.5)
+ax.axhline(y=ratio_mtx.shape[1] - 0.03, color="k", linewidth=0.5)
+ax.axvline(x=0, color="k", linewidth=0.5)
+ax.axvline(x=ratio_mtx.shape[0] - 0.03, color="k", linewidth=0.5)
 
-plt.yticks(rotation = 'horizontal')
-ax.xaxis.set_ticks_position('top')
-ax.tick_params(axis='x', which=u'both',color='white', length=2)
-ax.tick_params(axis='y', which=u'both',color='white', length=3)
+plt.yticks(rotation="horizontal")
+ax.xaxis.set_ticks_position("top")
+ax.tick_params(axis="x", which=u"both", color="white", length=2)
+ax.tick_params(axis="y", which=u"both", color="white", length=3)
 
 ax.set_ylabel("Hotspot level", fontproperties=prop, labelpad=0)
 ax.set_title("Hotspot level", fontproperties=prop, y=1.08)
@@ -147,7 +160,7 @@ for label in ax.get_xticklabels():
     label.set_fontproperties(small_prop)
 for label in ax.get_yticklabels():
     label.set_fontproperties(small_prop)
-    
+
 
 plt.savefig(OUTPUT_RATIO_FIG, bbox_inches="tight")
 

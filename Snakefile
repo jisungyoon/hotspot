@@ -150,6 +150,7 @@ rule all:
         expand(HOTSPOT_MAP_BY_PERIOD, period=PERIODS),
         expand(HOTSPOT_MATRIX_FIG_BY_PERIOD, period=PERIODS),
         expand(NULL_HOTSPOT_MATRIX_FIG_BY_PERIOD, period=PERIODS),
+        expand(RATIO_FIG_BY_PERIOD, period=PERIODS),
         OVERLAP_ENT_VAR,
         SIMULATION_FIG_BY_PK,
         SIMULATION_FIG_BY_GAMMA,

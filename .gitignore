@@ -36,6 +36,8 @@ supp.pdf
 *.ttf
 
 # Jupyter
+*.ipynb
+notebooks/
 .ipynb_checkpoints/
 
 # Snakemake

@@ -40,7 +40,7 @@ var_data_pdf_before = get_pdf(variance_before, var_bins)
 var_data_pdf_after = get_pdf(variance_after, var_bins)
 
 
-# draw figure
+# draw figu
 plt.rcParams["figure.figsize"] = (12.0, 6.0)
 
 prop = font_manager.FontProperties(fname=INPUT_FONT_FILE, size=22)
@@ -51,22 +51,16 @@ ax1.plot(
     ent_xs,
     ent_data_pdf_before,
     "-o",
-    linewidth=1.5,
     markerfacecolor="white",
-    markersize=0,
-    color="tab:orange",
-    alpha=0.7,
+    color="darkorange",
     label="Pre-COVID-19",
 )
 ax1.plot(
     ent_xs,
     ent_data_pdf_after,
     "-o",
-    linewidth=1.5,
     markerfacecolor="white",
-    markersize=0,
-    color="tab:blue",
-    alpha=0.7,
+    color="cornflowerblue",
     label="Post-COVID-19",
 )
 ax1.set_xlabel("Hotspot entropy", fontproperties=prop)
@@ -76,22 +70,16 @@ ax2.plot(
     var_xs,
     var_data_pdf_before,
     "-o",
-    linewidth=1.5,
+    color="darkorange",
     markerfacecolor="white",
-    markersize=0,
-    color="tab:orange",
-    alpha=0.7,
     label="Pre-COVID-19",
 )
 ax2.plot(
     var_xs,
     var_data_pdf_after,
     "-o",
-    linewidth=1.5,
+    color="cornflowerblue",
     markerfacecolor="white",
-    markersize=0,
-    color="tab:blue",
-    alpha=0.7,
     label="Post-COVID-19",
 )
 ax2.set_xlabel("Radius of recreational activity", fontproperties=prop)
@@ -100,8 +88,7 @@ for ax in [ax1, ax2]:
     ax.spines["right"].set_visible(False)
     ax.spines["top"].set_visible(False)
 
-plt.legend(prop=prop, frameon=False)
-
+plt.legend(prop=prop, frameon=False, bbox_to_anchor=(0.17, 1))
 for label in ax1.get_xticklabels():
     label.set_fontproperties(tiny_prop)
 for label in ax1.get_yticklabels():

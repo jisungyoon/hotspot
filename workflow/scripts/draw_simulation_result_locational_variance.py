@@ -3,8 +3,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from common import (calculate_entropy, calculate_locational_variance,
-                    generate_sequence, get_pdf)
+from common import (
+    calculate_entropy,
+    calculate_locational_variance,
+    generate_sequence,
+    get_pdf,
+)
 
 INPUT_BEFORE_FILES = snakemake.input.before_files
 INPUT_AFTER_FILES = snakemake.input.after_files
@@ -42,7 +46,7 @@ def find_best_results(result_dict):
 before_ent_result_dict, before_var_result_dict = get_results(INPUT_BEFORE_FILES)
 after_ent_result_dict, after_var_result_dict = get_results(INPUT_AFTER_FILES)
 
-gammas = [np.round(x, 2) for x in np.linspace(0, 5, 201)]
+gammas = [np.round(x, 3) for x in np.linspace(0, 5, 201)]
 before_vars = [before_var_result_dict[gamma][0] for gamma in gammas]
 after_vars = [after_var_result_dict[gamma][0] for gamma in gammas]
 
@@ -71,7 +75,7 @@ ax1.plot(
     color="cornflowerblue",
     label="Post-COVID-19",
 )
-ax1.set_ylabel(r"Radius of recretional activity JSD", fontproperties=prop)
+ax1.set_ylabel(r"$JSD_{Radius}$", fontproperties=prop)
 fig.text(0.52, 0.02, r"$\gamma$", ha="center", fontproperties=prop)
 
 plt.legend(fontsize=18, frameon=False)

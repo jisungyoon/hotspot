@@ -1,3 +1,5 @@
+import copy
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -6,6 +8,7 @@ from matplotlib import cm, font_manager
 from matplotlib.colors import LogNorm
 
 INPUT_SEQUENCE = snakemake.input.sequence
+INPUT_MASKING_FILE = snakemake.input.masking
 INPUT_HOTSPOT_LEVEL_BY_GRID = snakemake.input.hotspot_level_by_grid
 INPUT_VENDOR_TO_GRID = snakemake.input.vendor_to_grid
 INPUT_FONT_FILE = snakemake.input.font_file
@@ -20,6 +23,8 @@ hotspot_level = snakemake.params.hotspot_level
 
 # import data
 sequences = np.load(INPUT_SEQUENCE, allow_pickle=True)
+mask = np.load(INPUT_MASKING_FILE)
+sequences = sequences[mask]
 hotspot_level_by_grid = pd.read_pickle(INPUT_HOTSPOT_LEVEL_BY_GRID)
 vendor_to_grid = pd.read_pickle(INPUT_VENDOR_TO_GRID)
 
@@ -47,7 +52,13 @@ f = plt.figure(figsize=(6.2, 5.6))
 ax = f.add_axes([0.17, 0.02, 0.72, 0.79])
 axcolor = f.add_axes([0.93, 0.02, 0.03, 0.79])
 
-im = ax.matshow(normed_hotspot_matrix, cmap=cm.Blues, norm=LogNorm())
+my_cmap = copy.copy(cm.get_cmap("Blues"))  # copy the default cmap
+my_cmap.set_bad((0.8, 0.8, 0.8))
+
+
+im = ax.matshow(
+    normed_hotspot_matrix, cmap=my_cmap, norm=LogNorm(), vmin=1e-6, vmax=0.5
+)
 cbar = f.colorbar(im, cax=axcolor)
 
 ax.set_xticks(np.arange(0, 10))
@@ -56,8 +67,8 @@ ax.set_yticks(np.arange(0, 10))
 ax.set_yticklabels(np.arange(1, 11))
 ax.set_ylim((9.5, -0.5))
 
-ax.set_ylabel("Hotspot level", fontproperties=prop)
-ax.set_title("Hotspot level", fontproperties=prop, y=1.1)
+ax.set_ylabel("Origin hotspot level", fontproperties=prop)
+ax.set_title("Target hotspot level", fontproperties=prop, y=1.1)
 for label in ax.get_xticklabels():
     label.set_fontproperties(small_prop)
 for label in ax.get_yticklabels():
@@ -74,7 +85,7 @@ total_sum = np.sum(hotspot_matrix)
 for i, row in enumerate(null_hotspot_matrix):
     for j, x in enumerate(row):
         null_hotspot_matrix[i][j] = (
-            sum(hotspot_matrix[i, :]) * sum(hotspot_matrix[j, :]) / total_sum
+            sum(hotspot_matrix[i, :]) * sum(hotspot_matrix[:, j]) / total_sum
         )
 normed_null_hotspot_matrix = null_hotspot_matrix / np.sum(null_hotspot_matrix)
 
@@ -83,7 +94,9 @@ f = plt.figure(figsize=(6.2, 5.6))
 ax = f.add_axes([0.17, 0.02, 0.72, 0.79])
 axcolor = f.add_axes([0.93, 0.02, 0.03, 0.79])
 
-im = ax.matshow(normed_null_hotspot_matrix, cmap=cm.Blues, norm=LogNorm())
+im = ax.matshow(
+    normed_null_hotspot_matrix, cmap=cm.Blues, norm=LogNorm(), vmin=1e-6, vmax=0.5
+)
 cbar = f.colorbar(im, cax=axcolor)
 
 ax.set_xticks(np.arange(0, 10))
@@ -92,8 +105,8 @@ ax.set_yticks(np.arange(0, 10))
 ax.set_yticklabels(np.arange(1, 11))
 ax.set_ylim((9.5, -0.5))
 
-ax.set_ylabel("Hotspot level", fontproperties=prop)
-ax.set_title("Hotspot level", fontproperties=prop, y=1.1)
+ax.set_ylabel("Origin hotspot level", fontproperties=prop)
+ax.set_title("Target hotspot level", fontproperties=prop, y=1.1)
 for label in ax.get_xticklabels():
     label.set_fontproperties(small_prop)
 for label in ax.get_yticklabels():
@@ -115,10 +128,13 @@ annot = []
 for x_row, y_row in zip(ratio_mtx, hotspot_matrix):
     temp = []
     for x, y in zip(x_row, y_row):
-        temp.append(
-            "{}".format(np.round(x, 2)) + "\n"
-            "$10^{{{}}}$".format(np.round(np.log10(y), 1))
-        )
+        if y == 0:
+            temp.append("{}".format(np.round(x, 2)) + "\n" "$0$")
+        else:
+            temp.append(
+                "{}".format(np.round(x, 2)) + "\n"
+                "$10^{{{}}}$".format(np.round(np.log10(y), 1))
+            )
     annot.append(temp)
 
 f, ax = plt.subplots(figsize=(7, 7))
@@ -149,8 +165,8 @@ ax.xaxis.set_ticks_position("top")
 ax.tick_params(axis="x", which=u"both", color="white", length=2)
 ax.tick_params(axis="y", which=u"both", color="white", length=3)
 
-ax.set_ylabel("Hotspot level", fontproperties=prop, labelpad=0)
-ax.set_title("Hotspot level", fontproperties=prop, y=1.08)
+ax.set_ylabel("Origin hotspot level", fontproperties=prop, labelpad=0)
+ax.set_title("Target hotspot level", fontproperties=prop, y=1.08)
 
 for t in ax.texts:
     t.set_fontproperties(annot_prop)
